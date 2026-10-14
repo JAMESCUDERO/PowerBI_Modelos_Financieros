@@ -1,0 +1,6 @@
+*.dax text eol=lf
+*.pq text eol=lf
+*.sql text eol=lf
+*.md text eol=lf
+# nunca versionar binarios de Power BI
+*.pbix filter=
