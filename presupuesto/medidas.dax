@@ -1,0 +1,502 @@
+// Medidas DAX del modelo (104 en total), extraidas del .pbix y agrupadas por tabla.
+
+// ============================ Tabla: DAX ============================
+
+BALANCE =
+VAR ORIGEN =  SUMX('Origen Estados','Origen Estados'[VALOR])
+
+VAR ACTIVOS = CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR]), FILTER(PlanE_5,PlanE_5[NIVEL 1] = "ACTIVOS"))
+VAR PASIVOS = CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR]), FILTER(PlanE_5,PlanE_5[NIVEL 1] = "PASIVOS"))
+VAR PATRIMONIO = CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR]),FILTER('Origen Estados',AND('Origen Estados'[CODIGO_CONTABLE NUM]>=6000000000,'Origen Estados'[CODIGO_CONTABLE NUM]<62000000000)))
+
+
+RETURN
+ACTIVOS - PASIVOS - PATRIMONIO
+
+VALOR SIGNO =
+SUMX('Origen Estados','Origen Estados'[VALOR])*(-1)
+
+GASTOS =
+CALCULATE(SUMX('Origen Estados',[VALOR SIGNO]),FILTER(PlanE_5,PlanE_5[RESULTADO]="Gastos"))*(-1)
+
+
+//CALCULATE(SUMX('DATA ESTADOS','DATA ESTADOS'[MONTO]),FILTER('DATA ESTADOS','DATA ESTADOS'[RESULTADO EJERCICIO]="Gastos"))))
+
+INGRESOS =
+CALCULATE(SUMX('Origen Estados',[VALOR SIGNO]),FILTER(PlanE_5,PlanE_5[RESULTADO]="Ingresos"))
+
+BAR_INGRESOS =
+var MA = CALCULATE([INGRESOS],DATEADD(fecha[Date],-1,MONTH))
+var DIFERENCIA = [INGRESOS]-MA 
+VAR DIFERENCIA_2 = IF(DIFERENCIA<0,0,DIFERENCIA)
+VAR PRIMER_DATO = CALCULATE([INGRESOS],FILTER(fecha,fecha[Date].[NroMes]=1))
+RETURN
+
+(DIFERENCIA_2+PRIMER_DATO)
+
+BAR_GASTOS =
+var MA = CALCULATE([GASTOS],DATEADD(fecha[Date],-1,MONTH))
+var DIFERENCIA = [GASTOS]-MA 
+VAR DIFERENCIA_2 = IF(DIFERENCIA<0,0,DIFERENCIA)
+VAR PRIMER_DATO = CALCULATE([GASTOS],FILTER(fecha,fecha[Date].[NroMes]=1))
+RETURN
+
+(DIFERENCIA_2+PRIMER_DATO)*(-1)
+
+VALOR AA =
+CALCULATE([VALOR SIGNO],DATEADD(fecha[Date],-1,MONTH))
+
+Variacion_%_aa_RE =
+var res1=[VALOR SIGNO]-[VALOR AA]
+return
+DIVIDE(res1,[VALOR AA],BLANK())
+
+ACTIVOS =
+CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR]),FILTER('Origen Estados','Origen Estados'[CODIGO_CONTABLE NUM]<2000000000))
+
+BAR_ACTIVOS =
+var MA = CALCULATE([ACTIVOS],DATEADD(fecha[Date],-1,MONTH))
+var DIFERENCIA = [ACTIVOS]-MA 
+VAR DIFERENCIA_2 = IF(DIFERENCIA=-(MA),0,DIFERENCIA)
+VAR PRIMER_DATO = CALCULATE([INGRESOS],FILTER(fecha,fecha[Date].[NroMes]=1))
+RETURN
+
+DIFERENCIA_2
+
+PASIVOS =
+CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR]),
+                        FILTER('Origen Estados',and('Origen Estados'[CODIGO_CONTABLE NUM]>=2000000000
+                                                    ,'Origen Estados'[CODIGO_CONTABLE NUM]<3000000000)))
+                                                    *(-1)
+
+BAR_PASIVOS =
+var MA = CALCULATE([PASIVOS],DATEADD(fecha[Date],-1,MONTH))
+var DIFERENCIA = [PASIVOS]-MA 
+VAR DIFERENCIA_2 = IF(DIFERENCIA=-(MA),0,DIFERENCIA)
+VAR PRIMER_DATO = CALCULATE([PASIVOS],FILTER(fecha,fecha[Date].[NroMes]=1))
+RETURN
+
+DIFERENCIA
+
+VALOR MA BG =
+CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR]),DATEADD(fecha[Date],-1,MONTH))
+
+Variacion_%_aa_BG =
+var res1=SUMX('Origen Estados','Origen Estados'[VALOR])-[VALOR MA BG]
+return
+DIVIDE(res1,[VALOR MA BG],BLANK())
+
+BALANCE (+) =
+VAR ORIGEN =  SUMX('Origen Estados','Origen Estados'[VALOR])
+
+VAR ACTIVOS = CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR]), FILTER(PlanE_5,PlanE_5[NIVEL 1] = "ACTIVOS"))
+VAR PASIVOS = CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR]), FILTER(PlanE_5,PlanE_5[NIVEL 1] = "PASIVOS"))
+VAR PATRIMONIO = CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR]),FILTER('Origen Estados',AND('Origen Estados'[CODIGO_CONTABLE NUM]>=6000000000,'Origen Estados'[CODIGO_CONTABLE NUM]<62000000000)))
+
+
+RETURN
+ACTIVOS - PASIVOS - PATRIMONIO
+
+VALOR AA (+) =
+ABS(CALCULATE([VALOR SIGNO],DATEADD(fecha[Date],-12,MONTH)))
+
+VALOR MA (+) =
+ABS(CALCULATE([VALOR SIGNO],DATEADD(fecha[Date],-1,MONTH)))
+
+RESULTADO =
+[INGRESOS]-[GASTOS]
+
+VALOR (+) =
+ABS(SUMX('Origen Estados','Origen Estados'[VALOR]))
+
+CONTABLE =
+VAR VALORR =SUMX('Origen Estados','Origen Estados'[VALOR])-SUMX('Verificacion_Contable','Verificacion_Contable'[VALOR])
+
+RETURN
+IF( VALORR >0 ,VALORR,VALORR*(-1))
+
+BG:_ CONDICION =
+ABS([VALOR MA BG]) +ABS(SUMX('Origen Estados','Origen Estados'[VALOR]))
+
+ACTIVOS_MES ANTERIOR =
+CALCULATE([ACTIVOS],DATEADD(fecha[Date],-1,MONTH))
+
+ACTIVOS VARIACIÓN =
+[ACTIVOS]-[ACTIVOS_MES ANTERIOR]
+
+ACTIVOS VARIACIÓN % =
+DIVIDE([ACTIVOS VARIACIÓN],[ACTIVOS_MES ANTERIOR],BLANK())
+
+PASIVOS_MES ANTERIOR =
+CALCULATE([PASIVOS],DATEADD(fecha[Date],-1,MONTH))
+
+PASIVOS VARIACIÓN =
+[PASIVOS]-[PASIVOS_MES ANTERIOR]
+
+PASIVOS VARIACIÓN % =
+DIVIDE([PASIVOS VARIACIÓN],[PASIVOS_MES ANTERIOR],BLANK())
+
+PASIVOS FILTRO =
+ABS([PASIVOS]) +ABS([PASIVOS_MES ANTERIOR])
+
+RESULTADO DIFERENCIA =
+[BAR_INGRESOS]-[BAR_GASTOS]
+
+INGRESOS MES ANTERIO =
+CALCULATE([BAR_INGRESOS],DATEADD(fecha[Date],-1,MONTH))
+
+INGRESOS PESO =
+VAR TOTAL = CALCULATE([INGRESOS],ALLSELECTED(PlanE_5[NIVEL 3]))
+RETURN
+DIVIDE([INGRESOS],TOTAL,BLANK())
+
+GASTO PESO =
+VAR TOTAL = CALCULATE([GASTOS],ALLSELECTED(PlanE_5[NIVEL 3]))
+RETURN
+DIVIDE([GASTOS],TOTAL,BLANK())
+
+ACTIVOS FILTRO =
+ABS([ACTIVOS]) + ABS([ACTIVOS_MES ANTERIOR])
+
+Barra I G =
+[BAR_INGRESOS]+[BAR_GASTOS]
+
+Resultado TT =
+SUMX('Origen Estados',[VALOR SIGNO])
+
+Resultado PESO =
+VAR TOTAL = CALCULATE([RESULTADO],ALLSELECTED(PlanE_5[NIVEL 3]))
+RETURN
+DIVIDE([RESULTADO],TOTAL,BLANK())
+
+// ============================ Tabla: DAX INGRESOS ============================
+
+INGRESO PRESUPUESTO =
+CALCULATE(SUMX('Ingresos PRE','Ingresos PRE'[VALOR]),FILTER('Ingresos PRE','Ingresos PRE'[PROCESS]="PRESUPUESTO"))
+
+CODIFICADO INGRE =
+CALCULATE(SUMX('Ingresos PRE','Ingresos PRE'[VALOR]),FILTER('Ingresos PRE','Ingresos PRE'[PROCESS]="REFORMA"))
+
+INGRESO REFORMA =
+VAR INCRE =CALCULATE(SUMX('Ingresos PRE','Ingresos PRE'[VALOR]),FILTER('Ingresos PRE','Ingresos PRE'[PROCESS]="TRASPASO INCREMENTO"))
+
+VAR  DISMI =CALCULATE(SUMX('Ingresos PRE','Ingresos PRE'[VALOR]),FILTER('Ingresos PRE','Ingresos PRE'[PROCESS]="TRASPASO REDUCCION"))
+
+RETURN
+
+if(ISBLANK(INCRE + DISMI),0,(INCRE + DISMI))
+
+INGRESOS DEVENGADO =
+CALCULATE(SUMX('Ingresos DEV','Ingresos DEV'[VALOR]),FILTER('Ingresos DEV','Ingresos DEV'[PROCESO] = "ORIGINAL"))
+
+INGRESO CODIFICADO =
+[INGRESO PRESUPUESTO] + 'DAX INGRESOS'[INGRESO REFORMA]
+
+INGRESO TRASPASO INCREMENTO =
+CALCULATE(SUMX('Ingresos PRE','Ingresos PRE'[VALOR]),FILTER('Ingresos PRE','Ingresos PRE'[PROCESS]="TRASPASO INCREMENTO"))
+
+INGRESO TRASPASO REDUCCION =
+CALCULATE(SUMX('Ingresos PRE','Ingresos PRE'[VALOR]),FILTER('Ingresos PRE','Ingresos PRE'[PROCESS]="TRASPASO REDUCCION"))
+
+INGRESOS RECAUDADO =
+CALCULATE(SUMX('Ingresos DEV','Ingresos DEV'[VALOR]),FILTER('Ingresos DEV','Ingresos DEV'[PROCESO] = "RECAUDADO"))
+
+INGRESO SALDO POR DEVENGAR =
+var Monto = 'DAX INGRESOS'[INGRESO CODIFICADO] - 'DAX INGRESOS'[INGRESOS DEVENGADO]
+
+return
+
+IF (Monto <= 0, BLANK(), Monto)
+
+INGRESO CUENTAS POR COBRAR =
+'DAX INGRESOS'[INGRESOS DEVENGADO] - 'DAX INGRESOS'[INGRESOS RECAUDADO]
+
+DIFERENCIA INGRESOS =
+'DAX INGRESOS'[INGRESOS DEVENGADO] +SUMX('Origen EstadosINGRESOS','Origen EstadosINGRESOS'[VALOR])
+
+DEBE_IN =
+CALCULATE(SUMX('Origen EstadosINGRESOS','Origen EstadosINGRESOS'[VALOR]),FILTER('Origen EstadosINGRESOS','Origen EstadosINGRESOS'[INDICADOR]="S"))
+
+HABER_ING =
+CALCULATE(SUMX('Origen EstadosINGRESOS','Origen EstadosINGRESOS'[VALOR]),FILTER('Origen EstadosINGRESOS','Origen EstadosINGRESOS'[INDICADOR]="H"))
+
+HABER_P_INGRE =
+CALCULATE(SUMX('Verificacion_Ingresos','Verificacion_Ingresos'[VALOR]),FILTER('Verificacion_Ingresos','Verificacion_Ingresos'[INDICADOR]="H"))
+
+INGRESO CONTABLE =
+([HABER_ING]-[HABER_P_INGRE])*(-1)
+
+COMP_ INGRE_DIFER =
+ABS('DAX INGRESOS'[INGRESOS DEVENGADO]-[INGRESO CONTABLE])
+
+INGRESO EJECUCION DEVENGADO =
+DIVIDE('DAX INGRESOS'[INGRESOS DEVENGADO],[INGRESO CODIFICADO],0)
+
+INGRESO EJECUCION RECAUDADO =
+DIVIDE('DAX INGRESOS'[INGRESOS RECAUDADO],[INGRESO CODIFICADO],0)
+
+INGRESOS TOTEM =
+ABS([INGRESO CODIFICADO])+ABS([INGRESOS RECAUDADO]) + ABS([INGRESOS DEVENGADO])
+
+Devengado Alerta 1 =
+[INGRESO CODIFICADO] - [INGRESOS DEVENGADO]
+
+// ============================ Tabla: DAX  GASTOS ============================
+
+GASTO PRESUPUESTO =
+CALCULATE(SUMX('Gastos PRE','Gastos PRE'[VALOR]),FILTER('Gastos PRE','Gastos PRE'[PROCESS]="PRESUPUESTO"))
+                    *(-1)
+
+GASTO DEVENGADO =
+CALCULATE(SUMX('Gasto DEV','Gasto DEV'[VALOR])                        
+                            ,FILTER('Gasto DEV','Gasto DEV'[Proceso]="DEVENGADO"))
+                    *(-1)
+
+PRESUPUESTO FINAL =
+'DAX  GASTOS'[GASTO PRESUPUESTO] + [TRASPASO INCREMENTO] + [TRASPASO REDUCCION]
+
+GASTOS EJECUCION DEVENGADO =
+DIVIDE( 'DAX  GASTOS'[GASTO DEVENGADO],[PRESUPUESTO FINAL],0)
+
+DIFERENCIA GASTO =
+VAR VALOR = [GASTO DEVENGADO]-[CONTABLE] 
+
+RETURN
+ROUND(VALOR,2)
+
+GASTO PAGADO =
+CALCULATE(SUMX('Gasto DEV','Gasto DEV'[VALOR])                        
+                            ,FILTER('Gasto DEV','Gasto DEV'[Proceso]="PAGADO"))
+                *(-1)
+
+GASTOS EJECUCION COMPROMETIDO =
+DIVIDE([COMPROMETIDO],[PRESUPUESTO FINAL],0)
+
+DEBE =
+CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR]),FILTER('Origen Estados','Origen Estados'[INDICADOR]="S"))
+
+HABER =
+CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR]),FILTER('Origen Estados','Origen Estados'[INDICADOR]="H"))
+
+DEBE_P =
+CALCULATE(SUMX('Verificacion_Contable','Verificacion_Contable'[VALOR]),FILTER('Verificacion_Contable','Verificacion_Contable'[INDICADOR]="S"))
+
+HABER_P =
+CALCULATE(SUMX('Verificacion_Contable','Verificacion_Contable'[VALOR]),FILTER('Verificacion_Contable','Verificacion_Contable'[INDICADOR]="H"))
+
+COM_DEBE =
+[DEBE]-[DEBE_P]
+
+COMP_ HABER =
+[HABER]-[HABER_P]
+
+COMP_DIFE =
+ABS(ROUND([GASTO DEVENGADO]-[COM_DEBE],2))
+
+MODIFICADO =
+[TRASPASO INCREMENTO]+[TRASPASO REDUCCION]
+
+GASTOS EJECUCION COMUNAL =
+CALCULATE(DIVIDE( 'DAX  GASTOS'[GASTO DEVENGADO],[PRESUPUESTO FINAL],0),FILTER('Centro Gestor','Centro Gestor'[Tipo Servicio]="COMUNAL"))
+
+GASTOS EJECUCION GENERAL =
+CALCULATE(DIVIDE( 'DAX  GASTOS'[GASTO DEVENGADO],[PRESUPUESTO FINAL],0),FILTER('Centro Gestor','Centro Gestor'[Tipo Servicio]="GENERAL"))
+
+GASTOS EJECUCION SOCIAL =
+CALCULATE(DIVIDE( 'DAX  GASTOS'[GASTO DEVENGADO],[PRESUPUESTO FINAL],0),FILTER('Centro Gestor','Centro Gestor'[Tipo Servicio]="SOCIAL"))
+
+COMPROMETIDO =
+SUMX('Gasto COMPROMETIDO','Gasto COMPROMETIDO'[VALOR])
+                *(-1)
+
+SALDO DE COMPROMETIDO =
+[PRESUPUESTO FINAL]-[COMPROMETIDO]
+
+GASTO DEVENGADO_2 =
+'DAX  GASTOS'[GASTO DEVENGADO]
+
+GASTO VARIACION =
+VAR DEVENGADO = CALCULATE(SUMX('Gasto DEV','Gasto DEV'[VALOR])                        
+                            ,FILTER('Gasto DEV','Gasto DEV'[Proceso]="DEVENGADO"))
+                    *(-1)
+VAR MA = CALCULATE(DEVENGADO,DATEADD('fecha'[Date],-1,MONTH))
+RETURN
+DEVENGADO
+
+GASTO DEVENGADO DES =
+CALCULATE(SUMX('Gasto DEV DES','Gasto DEV DES'[Devengado])                        
+                            ,FILTER('Gasto DEV DES','Gasto DEV DES'[Proceso]="DEVENGADO"))
+                    *(-1)
+
+GASTO DEVENGADO DES % =
+var MACTUAL = [GASTO DEVENGADO DES]
+var MANTERIOR = CALCULATE([GASTO DEVENGADO DES],DATEADD(fecha[Date],-1,MONTH))
+RETURN
+DIVIDE(MACTUAL,MANTERIOR,0)
+
+Obras Publicas =
+CALCULATE([GASTO DEVENGADO DES],FILTER(PlanP_6,PlanP_6[NIVEL 2] = "75 OBRAS PÚBLICAS"))
+
+DIFERENCIA DEVENGAD =
+[PRESUPUESTO FINAL]-[GASTO DEVENGADO_2]
+
+INDICADOR GASTO =
+[GASTO DEVENGADO_2]+[PRESUPUESTO FINAL]+[COMPROMETIDO]+[GASTO PAGADO]+[POR COMPROMETER]+[GASTO PRESUPUESTO]
+
+POR COMPROMETER =
+[PRESUPUESTO FINAL]-[COMPROMETIDO]
+
+REFORMA =
+[TRASPASO INCREMENTO]+[TRASPASO REDUCCION]
+
+// ============================ Tabla: Gastos PRE ============================
+
+TRASPASO INCREMENTO =
+var INCREMENTO = CALCULATE(SUMX('Gastos PRE','Gastos PRE'[VALOR])
+                                ,FILTER('Gastos PRE','Gastos PRE'[PROCESS]="TRASPASO INCREMENTO"))
+                *(-1)
+
+RETURN
+INCREMENTO
+
+TRASPASO REDUCCION =
+var REDUCCION = CALCULATE(SUMX('Gastos PRE','Gastos PRE'[VALOR])
+                                ,FILTER('Gastos PRE','Gastos PRE'[PROCESS]="TRASPASO REDUCCION"))
+                *(-1)
+
+RETURN
+REDUCCION
+
+REDUCCION =
+var REDUCCION = CALCULATE(SUMX('Gastos PRE','Gastos PRE'[VALOR])
+                                ,FILTER('Gastos PRE','Gastos PRE'[PROCESS]="REDUCCION"))
+
+RETURN
+REDUCCION
+
+// ============================ Tabla: Proyección ============================
+
+COLOR EJECUCION =
+[GASTOS EJECUCION DEVENGADO]/SUMX('Proyección','Proyección'[Proyectado])
+
+// ============================ Tabla: DAX INDICADORES ============================
+
+Apalancamiento =
+var Pasivo_Total = CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR])
+                            ,FILTER('Origen Estados',AND('Origen Estados'[CODIGO_CONTABLE NUM]>=2000000000
+                                                        ,'Origen Estados'[CODIGO_CONTABLE NUM]<3000000000)))
+                    *(-1)
+
+var Activo_Total = CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR])
+                            ,FILTER('Origen Estados',AND('Origen Estados'[CODIGO_CONTABLE NUM]>=1000000000
+                                                        ,'Origen Estados'[CODIGO_CONTABLE NUM]<2000000000)))
+
+
+
+
+RETURN
+
+DIVIDE(Pasivo_Total,Activo_Total,BLANK())
+
+Autonomia Financiera =
+VAR Ingresos_Totales= CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR])
+                                ,FILTER('Origen Estados', and('Origen Estados'[CODIGO_CONTABLE NUM]>=6200000000
+                                                            ,'Origen Estados'[CODIGO_CONTABLE NUM]<6300000000)))
+
+VAR Ingresos_Propios = CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR])
+                                    ,FILTER('Origen Estados', and ('Origen Estados'[CODIGO_CONTABLE NUM]>=6210000000
+                                                                    ,'Origen Estados'[CODIGO_CONTABLE NUM]<6220000000)))
+                        +
+                        CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR])
+                                ,FILTER('Origen Estados',AND('Origen Estados'[CODIGO_CONTABLE NUM]>=6230000000
+                                                            ,'Origen Estados'[CODIGO_CONTABLE NUM]<6260000000)))
+
+
+
+
+RETURN
+ DIVIDE(Ingresos_Propios,Ingresos_Totales,BLANK())
+
+Capital de Trabajo =
+var Ingresos_Operacionales = CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR]),
+                                            FILTER('Origen Estados'
+                                                 ,and('Origen Estados'[CODIGO_CONTABLE NUM] >= 1100000000
+                                                    ,('Origen Estados'[CODIGO_CONTABLE NUM] < 1200000000))))
+
+var Activos_Corrientes =    CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR])
+                                            ,FILTER('Origen Estados',
+                                                    and('Origen Estados'[CODIGO_CONTABLE NUM]>=1300000000
+                                                        ,'Origen Estados'[CODIGO_CONTABLE NUM]<1400000000)))
+                            +Ingresos_Operacionales
+
+
+var Pasivos_Corrientes =    CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR])
+                                    ,FILTER('Origen Estados' 
+                                            ,and('Origen Estados'[CODIGO_CONTABLE NUM]>=2120000000
+                                                ,'Origen Estados'[CODIGO_CONTABLE NUM]<2140000000)))
+                            *(-1)
+RETURN
+ 
+ Activos_Corrientes - Pasivos_Corrientes
+
+Indice Corriente =
+var Ingresos_Operacionales = CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR]),
+                                            FILTER('Origen Estados'
+                                                 ,and('Origen Estados'[CODIGO_CONTABLE NUM] >= 1100000000
+                                                    ,('Origen Estados'[CODIGO_CONTABLE NUM] < 1200000000))))
+
+var Activos_Corrientes =    CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR])
+                                            ,FILTER('Origen Estados',
+                                                    and('Origen Estados'[CODIGO_CONTABLE NUM]>=1300000000
+                                                        ,'Origen Estados'[CODIGO_CONTABLE NUM]<1400000000)))
+                            +Ingresos_Operacionales
+
+
+var Pasivos_Corrientes =    CALCULATE(SUMX('Origen Estados','Origen Estados'[VALOR])
+                                    ,FILTER('Origen Estados' 
+                                            ,and('Origen Estados'[CODIGO_CONTABLE NUM]>=2120000000
+                                                ,'Origen Estados'[CODIGO_CONTABLE NUM]<2140000000)))*(-1)
+RETURN
+ 
+ DIVIDE(Activos_Corrientes , Pasivos_Corrientes,BLANK())
+
+Rotación de Activos =
+DIVIDE([INGRESOS],[ACTIVOS],1)
+
+Apalancamiento text =
+"El índice ubica el nivel de endeudamiento de la entidad en un " & ROUND([Apalancamiento]*100,2) & "% con relación al activo total.
+Indica también, que el " & 100-ROUND([Apalancamiento]*100,2) & "% del activo está financiado por el patrimonio."
+
+Autonomia Financiera Text =
+"Los ingresos propios representaron un " & ROUND([Autonomia Financiera]*100,2) & "% de los ingresos totales."
+
+Indice Corriente text =
+"El activo corriente representa "& ROUND([Indice Corriente],2) &" veces el pasivo corriente.
+" &
+    "Significa que por cada dólar que la entidad adeudaba a corto plazo, contaba con $" & ROUND([Indice Corriente],2) &" en el activo corriente."
+
+INGRESO REFORMA TAB =
+IF('DAX INGRESOS'[INGRESO REFORMA] = 0,BLANK(),'DAX INGRESOS'[INGRESO REFORMA])
+
+// ============================ Tabla: MET ============================
+
+DEVENGADO COMPUTADO =
+CALCULATE(SUMX('Gasto DEV','Gasto DEV'[VALOR])                        
+                            ,FILTER('Gasto DEV','Gasto DEV'[Proceso]="DEVENGADO"),PlanP_6,PlanP_6[Computable]="S")
+                    *(-1)
+
+PORCENTAJE COMPUTADO =
+DIVIDE([DEVENGADO COMPUTADO],[GASTO DEVENGADO],0)
+
+Codificado COM =
+CALCULATE([PRESUPUESTO FINAL],FILTER(PlanP_6,PlanP_6[Computable]="S"))
+
+Codificado COM % =
+DIVIDE([Codificado COM],[PRESUPUESTO FINAL],0)
+
+Devengado COM % =
+DIVIDE([DEVENGADO COMPUTADO],'DAX  GASTOS'[GASTO DEVENGADO],0)
+
+Margen =
+[Codificado COM] - [DEVENGADO COMPUTADO]
+

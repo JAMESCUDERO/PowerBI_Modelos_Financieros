@@ -1,0 +1,570 @@
+// Medidas DAX del modelo (98 en total), extraidas del .pbix y agrupadas por tabla.
+
+// ============================ Tabla: DAX ============================
+
+DAX cantidad de convenios =
+VAR CONTADOR = COUNT('Transferencias'[ID])
+VAR FILTRADO = CALCULATE(COUNT('Transferencias'[ID]),'Transferencias'[VIGENCIA]="ANTERIOR")
+RETURN
+FILTRADO-0
+
+Activos =
+CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[NIVEL 1]="Activos")
+
+Pasivos =
+CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[NIVEL 1]="Pasivos")
+
+Patrimonio =
+CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[NIVEL 1]="Patrimonio")
+
+monto aa =
+CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),DATEADD('date'[Fecha],-12,MONTH))
+
+monto ma =
+CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),DATEADD('date'[Fecha],-1,MONTH))
+
+BALANCE =
+VAR ACTIVOS = CALCULATE(SUMX('DATA ESTADOS','DATA ESTADOS'[MONTO]),'DATA ESTADOS'[NIVEL 1]="Activos")
+var PASIVOS = CALCULATE(SUMX('DATA ESTADOS','DATA ESTADOS'[MONTO]),'DATA ESTADOS'[NIVEL 1]="Pasivos")
+//var PATRIMONIO = CALCULATE(SUMX('DATA ESTADOS','DATA ESTADOS'[MONTO]),'DATA ESTADOS'[NIVEL 1]="Patrimonio")
+var PATRIMONIO = CALCULATE(SUMX('DATA ESTADOS','DATA ESTADOS'[MONTO]),or('Data Estados'[dos digitos]="60",'Data Estados'[dos digitos]="61"))
+RETURN
+ACTIVOS-PASIVOS-PATRIMONIO
+
+Ejecución Presupuestaria =
+var deven = [Devengado]
+var codif = [Codificado]
+return 
+DIVIDE(deven,codif,0)
+
+Ranking EP =
+RANKX(ALLSELECTED('Lista EP'[LOGO]),[Ejecución Presupuestaria])
+
+Bancos =
+var valor = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[NIVEL 3]= "Efectivo y Equivalente de Efectivo")
+
+var exclu_111_01 = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[CÓDIGO CONTABLE]= "111.01")
+
+var exclu_111_31 = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[CÓDIGO CONTABLE]= "111.31")
+
+var exclu_111_33 = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[CÓDIGO CONTABLE]= "111.33")
+
+var exclu_111_35 = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[CÓDIGO CONTABLE]= "111.35")
+
+var exclu_111_51 = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[CÓDIGO CONTABLE]= "111.51")
+
+var exclu_111_53 = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[CÓDIGO CONTABLE]= "111.53")
+RETURN
+valor-( exclu_111_01+exclu_111_31+exclu_111_33+exclu_111_35+exclu_111_51+exclu_111_53)
+
+Inversiones =
+var valor_121 = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[NIVEL 3]= "Inversiones Temporales")
+var valor_122 = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[NIVEL 3]= "Inversiones Permanentes en Títulos y Valores")
+var valor_123 = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[NIVEL 3]= "Inversiones en Préstamos y Anticipos")
+var resultado1= valor_121 + valor_122 + valor_123
+return
+resultado1-0
+
+Pre % deven =
+//devengado porcentaje y peso 
+
+var deven = SUMX('Data Presupuesto','Data Presupuesto'[DEVENGADO])
+var codif =CALCULATE(SUMX('Data Presupuesto','Data Presupuesto'[DEVENGADO]),ALL('Data Presupuesto'[NIVEL PROPIO]))
+return 
+DIVIDE(deven,codif,0)
+
+ingresos_res =
+CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[dos digitos]="62")*(-1)
+
+Resultado_ejer =
+(CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[dos digitos]="63")*(-1)) + (CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[dos digitos]="62")*(-1))
+
+texto_1 =
+IF([Resultado_ejer]>0,"Superavit ","Deficit")
+
+Cuentas Por Cobrar =
+var fin = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[NIVEL 3] = "Cuentas por Cobrar")
+return
+fin
+
+Cuentas Por Pagar =
+var fin = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[NIVEL 3] = "Cuentas por Pagar")
+var val = fin*(-1)
+var imprimir = IF(val=0,"-",val)
+return
+imprimir
+
+Etiqueta de pasivo =
+var pasivo = -[Pasivos]
+var resto = [Activos]
+var texto_f = IF(pasivo<resto*(0.20),"Pasivos: $ ","")
+var valor_f = IF(pasivo<resto*(0.20),pasivo,"")
+RETURN
+valor_f
+
+color_ ejecución =
+[Ejecución Presupuestaria] / SUMX('Proyección','Proyección'[Proyectado])
+
+Balance_Signo =
+IF(SUMX('Data Estados','Data Estados'[MONTO])>0,SUMX('Data Estados','Data Estados'[MONTO]),SUMX('Data Estados','Data Estados'[MONTO])*(-1))
+
+Variacion_aa =
+SUMX('Data Estados','Data Estados'[MONTO])-[monto aa]
+
+Variacion_%_MA_BG =
+var res1=SUMX('Data Estados','Data Estados'[MONTO])-[monto ma]
+return
+DIVIDE(res1,[monto ma],1)
+
+Variacion_MA =
+SUMX('Data Estados','Data Estados'[MONTO])-[monto ma]
+
+TTI_%_PR =
+var res1= CALCULATE(SUMX('Data Presupuesto','Data Presupuesto'[DEVENGADO]),ALLSELECTED('Data Presupuesto'[NIVEL 6 ]))
+
+var resfin = DIVIDE(SUMX('Data Presupuesto','Data Presupuesto'[DEVENGADO]),res1,1)
+RETURN
+
+resfin
+
+POR_TRANSFERIR_ANTERIOR =
+VAR CONTADOR = SUMX('Transferencias','Transferencias'[MONTO POR TRANSFERIR])
+VAR FILTRADO = CALCULATE(SUMX('Transferencias','Transferencias'[MONTO POR TRANSFERIR]),'Transferencias'[VIGENCIA]="ANTERIOR")
+RETURN
+FILTRADO-0
+
+MONTO_CONVENIO =
+VAR CONTADOR = SUMX('Transferencias','Transferencias'[MONTO DEL CONVENIO])
+VAR fILTRO = CALCULATE(SUMX('Transferencias','Transferencias'[MONTO DEL CONVENIO]),'Transferencias'[VIGENCIA]="ACTUAL")
+VAR TEXTO = IF(fILTRO=0,"",fILTRO)
+RETURN
+TEXTO
+
+DAX_FECHA_FIN_CONV =
+VAR FECHA = IF(CONCATENATEX('Transferencias','Transferencias'[FECHA FIN DE CONVENIO])= "Hasta el cumplimiento del objeto"," Al Cumplimiento",CONCATENATEX('Transferencias','Transferencias'[FECHA FIN DE CONVENIO]))
+VAR TEXTO = IF(FECHA="","-",FECHA)
+
+RETURN
+TEXTO
+
+MONTO_TRANSFERIDO =
+VAR CONTADOR = SUMX('Transferencias','Transferencias'[MONTO TRANSFERIDO])
+VAR FILTRO = CALCULATE(SUMX('Transferencias','Transferencias'[MONTO TRANSFERIDO]),'Transferencias'[VIGENCIA]="ACTUAL")
+VAR TEXTO = IF(FILTRO=0,"",FILTRO)
+RETURN
+TEXTO
+
+MONTO_POR_TRANS =
+VAR CONTADOR = SUMX('Transferencias','Transferencias'[MONTO POR TRANSFERIR])
+VAR fILTRO = CALCULATE(SUMX('Transferencias','Transferencias'[MONTO POR TRANSFERIR]),'Transferencias'[VIGENCIA]="ACTUAL")
+
+RETURN
+fILTRO-0
+
+Ranking SB =
+RANKX(ALLSELECTED('Lista EP'[LOGO]),[Bancos])
+
+Ranking IN =
+RANKX(ALLSELECTED('Lista EP'[LOGO]),[inversiones_des])
+
+Codificado =
+CALCULATE(SUMX('Data Presupuesto','Data Presupuesto'[PRESUPUESTO CODIFICADO]),FILTER('Data Presupuesto','Data Presupuesto'[NIVEL 0]="Gastos"))
+
+Devengado =
+CALCULATE(SUMX('Data Presupuesto','Data Presupuesto'[DEVENGADO]),'Data Presupuesto'[NIVEL 0]="Gastos")
+
+texto_ER =
+var texto_1 =IF([Resultado_ejer]>0,"Superavit ","Deficit")
+var id_text =CONCATENATEX('Lista EP','Lista EP'[ID])
+var id_num =CONVERT(id_text,INTEGER)
+var imprimir = IF(id_num>8,texto_1,"Dependiente")
+return
+"Resultado del Ejercicio"
+
+nota01 =
+var texto = CALCULATE(CONCATENATEX('Data Presupuesto','Data Presupuesto'[NOMBRE DE LA PARTIDA]),'Data Presupuesto'[PARTIDA PRESUPUESTARIA] ="999991")
+return
+IF(texto="","","- "&texto)
+
+nota02 =
+var texto = CALCULATE(CONCATENATEX('Data Presupuesto','Data Presupuesto'[NOMBRE DE LA PARTIDA]),'Data Presupuesto'[PARTIDA PRESUPUESTARIA] ="999992")
+
+return
+IF(texto="","","- "&texto)
+
+inversiones_val =
+var VAL= IF([inversiones_des]=0,"",[inversiones_des])
+
+return
+VAL
+
+Codificado_INGRESO =
+CALCULATE(SUMX('Data Presupuesto','Data Presupuesto'[PRESUPUESTO CODIFICADO]),FILTER('Data Presupuesto','Data Presupuesto'[NIVEL 0]="Ingresos"))
+
+Devengado_ingresos =
+CALCULATE(SUMX('Data Presupuesto','Data Presupuesto'[DEVENGADO]),'Data Presupuesto'[NIVEL 0]="Ingresos")
+
+Ejecución ingreso =
+var deven = [Devengado_ingresos]
+var codif = [Codificado_INGRESO]
+return 
+DIVIDE(deven,codif,0)
+
+TT_DEVEN_INGRESO =
+CALCULATE(SUMX('Data Presupuesto','Data Presupuesto'[DEVENGADO]),FILTER('Data Presupuesto','Data Presupuesto'[NIVEL 0]="Ingresos"))
+
+TTI_%_ingre_DEVEN =
+var res1= CALCULATE([Devengado_ingresos],ALLSELECTED('Data Presupuesto'[NIVEL 4]))
+
+var resfin = DIVIDE([Devengado_ingresos],res1,1)
+RETURN
+
+resfin
+
+color_ ejecución_ ingreso =
+[Ejecución ingreso] / SUMX('Proyección','Proyección'[Proyectado])
+
+DAX cantidad de convenios actuales =
+VAR CONTADOR = COUNT('Transferencias'[ID])
+VAR FILTRADO = CALCULATE(COUNT('Transferencias'[ID]),'Transferencias'[VIGENCIA]="ACTUAL")
+RETURN
+FILTRADO-0
+
+nota03 =
+var texto = CALCULATE(CONCATENATEX('Data Presupuesto','Data Presupuesto'[NOMBRE DE LA PARTIDA]),'Data Presupuesto'[PARTIDA PRESUPUESTARIA] ="999993")
+
+return
+IF(texto="","","- "&texto)
+
+inversiones_des =
+var inver1 = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),FILTER('Data Estados','Data Estados'[CÓDIGO CONTABLE]="111.51"))
+var inver2 = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),FILTER('Data Estados','Data Estados'[CÓDIGO CONTABLE]="121.01"))
+var inver3 = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),FILTER('Data Estados','Data Estados'[CÓDIGO CONTABLE]="121.03"))
+var inver4 = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),FILTER('Data Estados','Data Estados'[CÓDIGO CONTABLE]="121.05"))
+var inver5 = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),FILTER('Data Estados','Data Estados'[CÓDIGO CONTABLE]="121.07"))
+return
+inver1 +inver2 +inver3 + inver4 + inver5
+
+FECHA_INICIO =
+VAR FECHA = CONCATENATEX('Transferencias','Transferencias'[FECHA INICIO DE CONVENIO])
+VAR TEXTO = IF(FECHA ="","-",FECHA)
+RETURN
+
+TEXTO
+
+TT2% =
+var res1= CALCULATE([Balance_Signo],ALLSELECTED('Data Estados'[Nivel 3 Modificado]))
+var resfin = DIVIDE([Balance_Signo],res1,1)
+RETURN
+resfin
+
+BALANCE tt =
+VAR ACTIVOS = CALCULATE(SUMX('DATA ESTADOS','DATA ESTADOS'[MONTO]),'DATA ESTADOS'[NIVEL 1]="Activos")
+var PASIVOS = CALCULATE(SUMX('DATA ESTADOS','DATA ESTADOS'[MONTO]),'DATA ESTADOS'[NIVEL 1]="Pasivos")
+//var PATRIMONIO = CALCULATE(SUMX('DATA ESTADOS','DATA ESTADOS'[MONTO]),'DATA ESTADOS'[NIVEL 1]="Patrimonio")
+var PATRIMONIO = CALCULATE(SUMX('DATA ESTADOS','DATA ESTADOS'[MONTO]),or('Data Estados'[dos digitos]="60",'Data Estados'[dos digitos]="61"))
+RETURN
+ACTIVOS+PASIVOS+PATRIMONIO
+
+Pasivos Corrientes =
+var num_1 = SUMX('DATA ESTADOS','DATA ESTADOS'[MONTO])
+VAR COD_212_213 = CALCULATE(SUMX('DATA ESTADOS','DATA ESTADOS'[MONTO]),FILTER('DATA ESTADOS',AND('Data Estados'[NUM CODIGO]>=21200
+                                                            ,'Data Estados'[NUM CODIGO]<21400)))
+RETURN
+COD_212_213
+
+Activos Corrientes =
+CALCULATE(SUM('DATA ESTADOS'[MONTO]),FILTER('DATA ESTADOS',and('Data Estados'[NUM CODIGO]>=13000,'Data Estados'[NUM CODIGO]<14000)))+[Activos Operacionales]
+
+Activos Operacionales =
+CALCULATE(SUMX('DATA ESTADOS','DATA ESTADOS'[MONTO]),FILTER('DATA ESTADOS',and('Data Estados'[NUM CODIGO]>=11000,'Data Estados'[NUM CODIGO]<12000)))
+
+Indice Corriente =
+DIVIDE([Activos Corrientes],[Pasivos Corrientes],1)*(-1)
+
+indice corriente text 2 =
+"El activo corriente representa "& ROUND([Indice Corriente],2) &" veces el pasivo corriente.
+
+" &
+    "Significa que por cada dólar que "&CONCATENATEX('Lista EP','Lista EP'[INSTITUCIÓN])&" adeudaba a corto plazo, contaba con $" & ROUND([Indice Corriente],2) &" en el activo corriente."
+
+Ejecución de Gastos de Inversión =
+var devengado = CALCULATE(SUMX('Data Presupuesto','Data Presupuesto'[DEVENGADO]),FILTER('Data Presupuesto','Data Presupuesto'[ORDEN]=7))
+var codificadio = CALCULATE(SUMX('Data Presupuesto','Data Presupuesto'[PRESUPUESTO CODIFICADO]),FILTER('Data Presupuesto','Data Presupuesto'[ORDEN]=7))
+var valor = DIVIDE(devengado,codificadio,0)
+var imprimir = IF(valor=0,"-",valor)
+
+return 
+DIVIDE(devengado,codificadio,0)
+
+Ejecución gasto inversión text =
+"Mide el desempeño de los gastos de inversión.
+
+El valor de " &ROUND([Ejecución de Gastos de Inversión]*100,2) & "% demuestra la capacidad organizacional de "&CONCATENATEX('Lista EP','Lista EP'[INSTITUCIÓN])&" para ejecutar las obligaciones de inversión social."
+
+Capital de trabajo text =
+"El activo corriente representa "  & ROUND([liquidez],2) &" veces al Pasivo Corriente. 
+
+Significa que por cada dólar que "&CONCATENATEX('Lista EP','Lista EP'[INSTITUCIÓN])&" adeuda en el corto plazo, dispone de $" & ROUND([liquidez],2)  & " para cubrir sus obligaciones a corto plazo."
+
+Ingresos Propios =
+var num = SUMX('DATA ESTADOS','DATA ESTADOS'[MONTO])
+var cod_621 = CALCULATE(SUMX('DATA ESTADOS','DATA ESTADOS'[MONTO]),FILTER('DATA ESTADOS',AND('DATA ESTADOS'[NUM CODIGO]>=62100
+                                                    ,'Data Estados'[NUM CODIGO]<62200)))
+var COD_623_624_625 = CALCULATE(SUMX('DATA ESTADOS','DATA ESTADOS'[MONTO]),FILTER('DATA ESTADOS',AND('DATA ESTADOS'[NUM CODIGO]>=62300
+                                                    ,'DATA ESTADOS'[NUM CODIGO]<62600)))                                                    
+RETURN
+
+(cod_621 + COD_623_624_625)*(-1)
+
+Ingresos Totales =
+var num = SUMX('DATA ESTADOS','DATA ESTADOS'[MONTO])
+var numer1 = CALCULATE(SUMX('DATA ESTADOS','DATA ESTADOS'[MONTO]),FILTER('DATA ESTADOS',AND('Data Estados'[NUM CODIGO]>=62000
+                                                    ,'Data Estados'[NUM CODIGO]<63000)))
+RETURN
+numer1*(-1)
+
+ENDEUDAMIENTO Text =
+"El indice de endeudamiento es de " & ROUND([Endeudamiento]*100,2) & "% para  "&CONCATENATEX('Lista EP','Lista EP'[INSTITUCIÓN])&" es la proporción de activos que se financian con deuda (total de pasivo).
+
+Es decir, que de cada dólar en activos $"& TRUNC([Endeudamiento],2) &" corresponde a deuda."
+
+Medida =
+CONCATENATEX('Lista EP','Lista EP'[INSTITUCIÓN])
+
+Dependencia Financiera =
+var cod_62601 = -CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]), FILTER('Data Estados','Data Estados'[NUM CODIGO]=62601))
+var cod_62621 =  -CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]), FILTER('Data Estados','Data Estados'[NUM CODIGO]=62621))
+var ingresos = -CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),FILTER('Data Estados','Data Estados'[dos digitos]="62"))
+VAR IN_mun = (cod_62601+cod_62621)
+var numerador =ingresos-(cod_62601+cod_62621)
+
+RETURN
+
+1-DIVIDE(ingresos-IN_mun,ingresos,0)
+
+liquidez =
+var deuda_flotante = -CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),FILTER('Data Estados','Data Estados'[dos digitos]="21"))
+
+
+RETURN
+
+DIVIDE([Activos Operacionales],deuda_flotante,0)
+
+LIQUI CONSO TEXT =
+"El activo corriente representa "  & ROUND([liquidez],2) &" veces al Pasivo Corriente. 
+
+Significa que por cada dólar que adeudado en el corto plazo, dispone de $" & ROUND([liquidez],2) & " para cubrir sus obligaciones a corto plazo."
+
+Cuentas Por Pagar conso =
+var fin = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[NIVEL 3] = "Cuentas por Pagar")
+var val = fin*(-1)
+var imprimir = IF(val=0,"-",val)
+return
+val
+
+Cuentas Por Pagar TT =
+var fin = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[NIVEL 3] = "Cuentas por Pagar")
+var val = fin*(-1)
+var imprimir = IF(val=0,"-",val)
+return
+val
+
+Endeudamiento =
+var pasivos = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),FILTER('Data Estados',and('Data Estados'[NUM CODIGO]>=20000,'Data Estados'[NUM CODIGO]<30000)))*(-1)
+
+var activo = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),FILTER('Data Estados',('Data Estados'[NUM CODIGO]<20000)))
+RETURN
+DIVIDE(pasivos,activo,1)
+
+Nivel_2 =
+var final = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[NIVEL 1]="PATRIMONIO")
+
+return
+final
+
+No Plan =
+CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),FILTER('Data Estados','Data Estados'[NIVEL 1]=""))
+
+BALANCE_61 =
+var PATRIMONIO_61 = CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),'Data Estados'[NIVEL 2]="PATRIMONIO ACUMULADO")
+RETURN
+PATRIMONIO_61+[Pasivos]+[Activos]
+
+BALANCE_alter =
+[Patrimonio]+[Pasivos]+[Activos]
+
+VERIFIC_PRESU1 =
+VAR CODIF=SUMX('Data Presupuesto','Data Presupuesto'[PRESUPUESTO CODIFICADO])
+
+VAR CERTI=SUMX('Data Presupuesto','Data Presupuesto'[CERTIFICADO])
+
+Var fin = IF( ROUND(CERTI,0)<= ROUND(CODIF,0) ,"OK","ERROR")
+
+RETURN
+fin
+
+VERIFIC_PRESU2 =
+VAR COMPROME = SUMX('Data Presupuesto','Data Presupuesto'[COMPROMETIDO])
+
+VAR CERTIF=SUMX('Data Presupuesto','Data Presupuesto'[CERTIFICADO])
+
+Var fin = IF(ROUND(COMPROME,0)>ROUND(CERTIF,0),"ERROR","OK")
+
+RETURN
+fin
+
+VERIFIC_PRESU3 =
+VAR COMPROME = SUMX('Data Presupuesto','Data Presupuesto'[COMPROMETIDO])
+
+VAR DEVEB=SUMX('Data Presupuesto','Data Presupuesto'[DEVENGADO])
+
+Var fin = IF(ROUND(COMPROME,0)<round(DEVEB,0),"ERROR","OK")
+
+RETURN
+fin
+
+VERIFIC_PRESU4 =
+VAR CODIF = ROUND(SUMX('Data Presupuesto','Data Presupuesto'[PRESUPUESTO CODIFICADO]),0)
+
+VAR CERTI = ROUND(SUMX('Data Presupuesto','Data Presupuesto'[CERTIFICADO]),0)
+
+VAR COMPROME = ROUND(SUMX('Data Presupuesto','Data Presupuesto'[COMPROMETIDO]),0)
+
+VAR DEVENGAD=ROUND(SUMX('Data Presupuesto','Data Presupuesto'[DEVENGADO]),0)
+
+Var fin = IF(OR(CODIF<CERTI,OR(CODIF<COMPROME,CODIF<DEVENGAD)),"ERROR","OK")
+
+RETURN
+fin
+
+VERIFIC_PRESU5 =
+VAR CODIFICADO_1 = ROUND(SUMX('Data Presupuesto','Data Presupuesto'[COMPROMETIDO]),0)
+
+VAR DEVEB=ROUND(SUMX('Data Presupuesto','Data Presupuesto'[DEVENGADO]),0)
+
+VAR PAGADO_1 = ROUND(SUMX('Data Presupuesto','Data Presupuesto'[PAGADO]),0)
+Var fin = IF(OR(PAGADO_1>CODIFICADO_1,PAGADO_1>DEVEB),"ERROR","OK")
+
+
+RETURN
+fin
+
+UNIFICADO =
+IF(OR([VERIFIC_PRESU1]="ERROR",OR([VERIFIC_PRESU2]="ERROR",OR([VERIFIC_PRESU3]="ERROR",OR([VERIFIC_PRESU4]="ERROR",[VERIFIC_PRESU5]="ERROR")))),"ERROR","OK")
+
+No plan presupuesto =
+CALCULATE(SUMX('Data Presupuesto','Data Presupuesto'[PRESUPUESTO CODIFICADO]),FILTER('Data Presupuesto','Data Presupuesto'[NIVEL 0]=""))
+
+Balance CODIF =
+var ingresos= CALCULATE(SUMX('Data Presupuesto','Data Presupuesto'[PRESUPUESTO CODIFICADO]),'Data Presupuesto'[NIVEL 0]="INGRESOS")
+var gastos = CALCULATE(SUMX('Data Presupuesto','Data Presupuesto'[PRESUPUESTO CODIFICADO]),'Data Presupuesto'[NIVEL 0]="GASTOS")
+
+RETURN
+
+ingresos-gastos
+
+Balance MODIF =
+VAR INGRESO= CALCULATE(SUMX('Data Presupuesto','Data Presupuesto'[MODIFICACIONES]),'Data Presupuesto'[NIVEL 0]="INGRESOS")
+VAR GASTOS= CALCULATE(SUMX('Data Presupuesto','Data Presupuesto'[MODIFICACIONES]),'Data Presupuesto'[NIVEL 0]="GASTOS")
+RETURN
+
+INGRESO-GASTOS
+
+Balance PRESU =
+var ingresos= CALCULATE(SUMX('Data Presupuesto','Data Presupuesto'[PRESUPUESTO INICIAL]),'Data Presupuesto'[NIVEL 0]="INGRESOS")
+var gastos = CALCULATE(SUMX('Data Presupuesto','Data Presupuesto'[PRESUPUESTO INICIAL]),'Data Presupuesto'[NIVEL 0]="GASTOS")
+
+RETURN
+
+ingresos-gastos
+
+1CODIF =
+SUMX('Data Presupuesto','Data Presupuesto'[PRESUPUESTO CODIFICADO])
+
+1CERTI =
+SUMX('Data Presupuesto','Data Presupuesto'[CERTIFICADO])
+
+DEVENGADO MES A =
+CALCULATE(SUMX('Data Presupuesto',[Devengado]),DATEADD('date'[Fecha],-1,MONTH))
+
+DEVENGADO DIF =
+VAR MONTO1 = [Devengado]-[DEVENGADO MES A]
+
+RETURN
+IF(LEFT(CONCATENATEX('date','date'[Mes]),5)="ENERO",[Devengado],MONTO1)
+--MONTO1
+
+MES MAX =
+MAX('date'[N Mes])
+
+// ============================ Tabla: Consulta2 ============================
+
+Etiqueta de pasivo tex =
+var pasivo = -[Pasivos]
+var resto = [Activos]
+var texto_f = IF(pasivo<resto*(0.2),"Pasivos:","")
+var valor_f = IF(pasivo<resto*(0.2),pasivo,"")
+RETURN
+texto_f
+
+Variacion_%_aa_BG =
+var res1=SUMX('Data Estados','Data Estados'[MONTO])-[monto aa]
+return
+DIVIDE(res1,[monto aa],1)
+
+Peso_%_TTER3 =
+var res1 = CALCULATE([Balance_Signo],ALLSELECTED('Data Estados'[NIVEL 3]))
+var res_fin= DIVIDE([Balance_Signo],res1,0)
+RETURN
+
+res_fin
+
+inversiones_text =
+var VAL= IF([inversiones_des]=0,"","Inversiones")
+
+return
+VAL
+
+TTI_%_ingre_codi =
+var res1= CALCULATE([Codificado_INGRESO],ALLSELECTED('Data Presupuesto'[NIVEL 4]))
+
+var resfin = DIVIDE([Codificado_INGRESO],res1,1)
+RETURN
+
+resfin
+
+text_ranking =
+var texto =LEFT(CONCATENATEX('Lista EP','Lista EP'[Asiganción]),3)
+RETURN
+IF(texto="Con","CON ASIGNACIÓN","SIN ASIGNACIÓN")
+
+Peso_%_HTER3 =
+var res1 = CALCULATE([Balance_Signo],ALLSELECTED('Data Estados'[Institución]))
+var res_fin= DIVIDE([Balance_Signo],res1,0)
+RETURN
+
+res_fin
+
+Ingresos asignaciones =
+var cod_62601 = -CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]), FILTER('Data Estados','Data Estados'[NUM CODIGO]=62601))
+var cod_62621 =  -CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]), FILTER('Data Estados','Data Estados'[NUM CODIGO]=62621))
+var ingresos = -CALCULATE(SUMX('Data Estados','Data Estados'[MONTO]),FILTER('Data Estados','Data Estados'[dos digitos]="62"))
+VAR IN_mun = (cod_62601+cod_62621)
+RETURN
+IN_mun
+
+// ============================ Tabla: MET ============================
+
+Devengado COM =
+CALCULATE(SUMX('Data Presupuesto','Data Presupuesto'[DEVENGADO]),'Data Presupuesto'[NIVEL 0]="Gastos",'Data Presupuesto','Data Presupuesto'[COMPUTABLE] = "S")
+
+Devengado COM % =
+DIVIDE([Devengado COM],[Devengado],0)
+
+Codificado COM =
+CALCULATE(SUMX('Data Presupuesto','Data Presupuesto'[PRESUPUESTO CODIFICADO]),'Data Presupuesto','Data Presupuesto'[NIVEL 0]="Gastos",'Data Presupuesto','Data Presupuesto'[COMPUTABLE]="S")
+
+Codificado COM % =
+DIVIDE([Codificado COM],[Codificado],0)
+
